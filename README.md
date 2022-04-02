@@ -1,6 +1,14 @@
 # OSMtoVTOL
  Export OSM data for use in VTOLVR
 
+## Clone
+
+Because there is a submodule easiest way to clone is with:
+
+`git clone --recursive https://github.com/Slord6/OSMtoVTOL.git`
+
+Then run `npm i`
+
 ## State
 
 Work in progress!
@@ -18,6 +26,7 @@ function reader(data) {
 ```
 
 otherwise it will try to open a non-existant file when it's loaded
+
 ## Node Version
 
 This targets Node 17.5+ (because of use of the `fetch` API)
