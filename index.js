@@ -45,7 +45,6 @@ function getElementGeoJSONCoords(element) {
 function queryResToGeoJSON(queryRes) {
     const consolidated = consolidateElements(queryRes.elements);
     const features = consolidated.map(element => {
-        const isNode = (element.type == "node")
         return { 
             geometry: {
                 type: getElementGeoJSONType(element),
