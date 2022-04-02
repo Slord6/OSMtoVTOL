@@ -201,8 +201,11 @@ function toVtolCustomMap (queryRes, worldBbox, mapID, edgeMode, coastSide, biome
     insertConfigItem('', config, 'BASES', [], {})       // TODO: from OSM
     
     //BezierRoads: queryResToBezierRoads(queryRes, worldBbox)
-    insertConfigItem('BezierRoads', config, 'Chunk', [], {}) // TODO: build object to add
-    insertConfigItem('BezierRoads/Chunk', config, ) // Note positionToChunk already written
+    const roads = {name: 'BezierRoads', nodes: [], values: {}}
+    insertConfigItem('BezierRoads/Chunk', roads) // Note positionToChunk already written
+
+    // Add roads items to base config
+    insertConfigItem('', config, 'BezierRoads', roads.nodes, roads.values)
     return config;
 }
 
