@@ -1,20 +1,17 @@
 const queryParams = "?data=";
 
-const API = {
-
-    url: "https://overpass-api.de/api/interpreter",
+url: "https://overpass-api.de/api/interpreter";
     
-    interrogate: async (query, cb) => {
-        const encodedData = encodeURIComponent(query)
-        const requestUrl = `${API.url}${queryParams}${encodedData}`
-        const response = await fetch(requestUrl)
-        return response.json()
-    },
-
-    injectBbox: (query, blLat, blLon, trLat, trLon) =>  {
-        area = `${blLat},${blLon},${trLat},${trLon}`
-        return query.replaceAll("{{bbox}}", area)
-    }
+async function interrogate (query) {
+    const encodedData = encodeURIComponent(query)
+    const requestUrl = `${API.url}${queryParams}${encodedData}`
+    const response = await fetch(requestUrl)
+    return response.json()
 }
 
-module.exports = API
+function injectBbox (query, blLat, blLon, trLat, trLon) {
+    area = `${blLat},${blLon},${trLat},${trLon}`
+    return query.replaceAll("{{bbox}}", area)
+}
+
+export default {interrogate, injectBbox}

@@ -14,5 +14,6 @@
     "map"
   ],
   "author": "Sam Lord",
-  "license": "MIT"
+  "license": "MIT",
+  "type": "module"
 }
