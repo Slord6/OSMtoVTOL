@@ -323,12 +323,9 @@ if(!fs.existsSync(cacheFile)) {
             "qsLimit": -1
         }
     }`;
-    const parsedConfig = {
-        name: "CustomScenario",
-        nodes: [],
-        values: {}
-    }
-    const gameBbox = [0, 0, 5000, 3000]
-    const custom = vtolMapGen.toVtolCustomMap(queryRes, bbox, "genMap", "Coast", "South", "Boreal", "64x64", gameBbox)
+    const mapSizeChunk = 64
+    const mapSize = 64 * vtolMapGen.CHUNK_MULTIPLIER
+    const gameBbox = [0, 0, mapSize, mapSize]
+    const custom = vtolMapGen.toVtolCustomMap(queryRes, bbox, "genMap", "Coast", "South", "Boreal", mapSizeChunk, gameBbox)
     fs.writeFileSync('./newmap.vtm', save(custom));
 }
