@@ -1,0 +1,30 @@
+/*
+Primary roads, airfields + helipads and military bases
+*/
+
+[out:json];
+
+(
+  // Main Roads
+  way[highway=motorway]({{bbox}});
+  way[highway=trunk]({{bbox}});
+  way[highway=primary]({{bbox}});
+  
+  // Aircraft locations
+  way[aeroway=runway]({{bbox}});
+  node[aeroway=runway]({{bbox}});
+  way[aeroway=helipad]({{bbox}});
+  node[aeroway=helipad]({{bbox}});
+  way[aeroway=aerodrome]({{bbox}});
+  node[aeroway=aerodrome]({{bbox}});
+  way[aeroway=heliport]({{bbox}});
+  node[aeroway=heliport]({{bbox}});
+  
+  // Military
+  node[military=base]({{bbox}});
+  way[military=base]({{bbox}});
+);
+
+out body;
+>;
+out skel qt;
