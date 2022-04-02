@@ -1,0 +1,3 @@
+[submodule "VTOLConfigNodeToJSON"]
+	path = VTOLConfigNodeToJSON
+	url = https://github.com/Strikeeaglechase/VTOLConfigNodeToJSON.git
