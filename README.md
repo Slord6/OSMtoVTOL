@@ -5,7 +5,7 @@
 
 Work in progress!
 
-Currently gets data from OSM and converts to geojson
+Currently gets data from OSM and outputs an empty map config
 
 ## Node Version
 
