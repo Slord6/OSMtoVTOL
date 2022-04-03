@@ -2,47 +2,6 @@
 const CHUNK_MULTIPLIER = 3.0625
 
 
-function queryResToBezierRoads(queryRes, worldBbox) {
-    /*
-    BezierRoads
-	{
-		Chunk
-		{
-			grid = (18,33)
-			Segment
-			{
-				id = 4
-				type = 0
-				bridge = False
-				length = 250.3658
-				s = (57962.1884765625, 249.36279296875, 103074.36437988281)
-				m = (58078.710205078125, 250.6358642578125, 103105.03308105469)
-				e = (58203.53515625, 251.75927734375, 103140.572265625)
-				ps = 20
-				ns = 5
-			}
-			Segment
-			{
-				id = 5
-				type = 0
-				bridge = False
-				length = 269.0178
-				s = (58203.53515625, 251.75927734375, 103140.572265625)
-				m = (58328.341796875, 253.43212890625, 103176.10363769531)
-				e = (58461.51171875, 254.09228515625, 103216.51574707031)
-				ps = 4
-				ns = 6
-			}
-    */
-
-    // loop through elements
-    // build out nodes for roads
-    // Move into game-space coords
-    // convertToOffset(worldBbox, ??)
-    // convert to beziers
-    return {}
-}
-
 /**
  * Take an array of 2 lat/lon pairs and calculate
  * the width and height of the rect they describe
@@ -118,7 +77,7 @@ function consolidateElements(elements) {
 }
 
 function positionToChunk(lat, lon) {
-    return {lat: lat / CHUNK_MULTIPLIER, lon: lon / CHUNK_MULTIPLIER}
+    return {lat: Math.floor(lat / CHUNK_MULTIPLIER), lon: Math.floor(lon / CHUNK_MULTIPLIER)}
 }
 
 function getConfigItemValue(path, config, valueName) {
@@ -127,6 +86,74 @@ function getConfigItemValue(path, config, valueName) {
 
 function getConfigItemNodes(path, config) {
     return getConfigItem(path, config).nodes;
+}
+
+let segmentID = 1;
+function generateDefaultSegmentValues() {
+    return {
+        id: ++segmentID,
+        type: 0, // TODO: seems to be 0 or 1?
+        bridge: "False",
+        length: 0,
+        s: "", // (57962.1884765625, 249.36279296875, 103074.36437988281),
+        m: "", // (58078.710205078125, 250.6358642578125, 103105.03308105469),
+        e: "", // (58203.53515625, 251.75927734375, 103140.572265625),
+        ps: 1, // 20,
+        ns: 1, // 5
+    }
+}
+
+function calcSegmentLength(segment) {
+    let startPos = segment.values.s.split(', ').map(x => Number(x));
+    let endPos = segment.values.e.split(', ').map(x => Number(x));
+
+    const a = startPos[0] - endPos[0];
+    const b = startPos[1] - endPos[1];
+    const c = startPos[2] - endPos[2];
+    const distance = Math.sqrt(a * a + b * b + c * c);
+
+    return distance
+}
+
+function calcSegmentMiddleString(segment) {
+    const startPos = segment.values.s.split(', ').map(x => Number(x));
+    const endPos = segment.values.e.split(', ').map(x => Number(x));
+
+    const middleX = ((endPos[0] - startPos[0])/2) + startPos[0];
+    const middleY = ((endPos[1] - startPos[1])/2) + startPos[1];
+    const middleZ = ((endPos[2] - startPos[2])/2) + startPos[2];
+
+    return `${middleX}, ${middleY}, ${middleZ}`
+}
+
+function addSegmentToChunk(node, chunk) {
+    const segment = {name: "Segment", nodes: [], values: generateDefaultSegmentValues()}
+    segment.values.s = `${node.lat}, 250, ${node.lon}`;
+    if(chunk.nodes.length > 0) {
+        const prevSegment = chunk.nodes[chunk.nodes.length - 1];
+        // TODO: Y component
+        prevSegment.values.e = segment.values.s;
+        prevSegment.values.m = calcSegmentMiddleString(prevSegment);
+        prevSegment.values.length = calcSegmentLength(prevSegment)
+    }
+    chunk.nodes.push(segment)
+}
+
+function generateChunkedRoads(elements) {
+    const chunks = {};
+    const allChunks = [];
+    elements.forEach((way) => {
+        way.nodes.forEach((node) => {
+            const grid = positionToChunk(node.lat, node.lon);
+            if(!chunks[grid.lat]) chunks[grid.lat] = {}
+            if(!chunks[grid.lat][grid.lon]) chunks[grid.lat][grid.lon] = {name: "Chunk", nodes: [], values: {}}
+            addSegmentToChunk(node, chunks[grid.lat][grid.lon])
+            chunks[grid.lat][grid.lon].values.grid = `(${grid.lat},${grid.lon})`
+            
+            allChunks.push(chunks[grid.lat][grid.lon])
+        });
+    });
+    return allChunks
 }
 
 /**
@@ -197,12 +224,12 @@ function toVtolCustomMap (queryRes, worldBbox, mapID, edgeMode, coastSide, biome
     insertConfigItem('', config, 'TerrainSettings')
     insertConfigItem('', config, 'StaticObjects')
     insertConfigItem('', config, 'Conditionals')
-    insertConfigItem('', config, 'BezierRoads', [], {}) // TODO: from OSM
-    insertConfigItem('', config, 'BASES', [], {})       // TODO: from OSM
-    
+    insertConfigItem('', config, 'BASES', [], {})       // TODO: from OSM ?
+
+    const chunkedRoads = generateChunkedRoads(queryRes.elements);
+
     //BezierRoads: queryResToBezierRoads(queryRes, worldBbox)
-    const roads = {name: 'BezierRoads', nodes: [], values: {}}
-    insertConfigItem('BezierRoads/Chunk', roads) // Note positionToChunk already written
+    const roads = {name: 'BezierRoads', nodes: chunkedRoads, values: {}}
 
     // Add roads items to base config
     insertConfigItem('', config, 'BezierRoads', roads.nodes, roads.values)

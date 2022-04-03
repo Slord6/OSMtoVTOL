@@ -326,6 +326,7 @@ if(!fs.existsSync(cacheFile)) {
     const mapSizeChunk = 64
     const mapSize = 64 * vtolMapGen.CHUNK_MULTIPLIER
     const gameBbox = [0, 0, mapSize, mapSize]
-    const custom = vtolMapGen.toVtolCustomMap(queryRes, bbox, "genMap", "Coast", "South", "Boreal", mapSizeChunk, gameBbox)
-    fs.writeFileSync('./newmap.vtm', save(custom));
+    const mapID = "newmap"
+    const custom = vtolMapGen.toVtolCustomMap(queryRes, bbox, mapID, "Coast", "South", "Boreal", mapSizeChunk, gameBbox)
+    fs.writeFileSync(`./${mapID}.vtm`, save(custom));
 }
