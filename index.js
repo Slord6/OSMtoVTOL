@@ -4,7 +4,8 @@ import API from './overpassAPI.js'
 import {save} from './VTOLConfigNodeToJSON/dist/index.js'
 
 const cacheFile = './queryCache';
-const bbox = [50.36835019940018,-4.320030212402344,50.46985198362652,-4.138927459716797]
+//const bbox = [50.36835019940018,-4.320030212402344,50.46985198362652,-4.138927459716797] //plymouth
+const bbox = [50.36035645494996,-4.336509704589844,50.43432923127259,-4.036445617675781]
 if(!fs.existsSync(cacheFile)) {
     console.log('Querying API...')
     const rawQuery = fs.readFileSync('./query.txt').toString();
@@ -323,10 +324,11 @@ if(!fs.existsSync(cacheFile)) {
             "qsLimit": -1
         }
     }`;
-    const mapSizeChunk = 64
-    const mapSize = 64 * vtolMapGen.CHUNK_MULTIPLIER
+    const mapSizeChunk = 16
+    const mapSize = mapSizeChunk * vtolMapGen.CHUNK_MULTIPLIER_M
     const gameBbox = [0, 0, mapSize, mapSize]
-    const mapID = "newmap"
+    const mapID = "complex"
     const custom = vtolMapGen.toVtolCustomMap(queryRes, bbox, mapID, "Coast", "South", "Boreal", mapSizeChunk, gameBbox)
     fs.writeFileSync(`./${mapID}.vtm`, save(custom));
+    console.log(`saved ${mapID}`)
 }

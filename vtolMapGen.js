@@ -1,5 +1,6 @@
 
-const CHUNK_MULTIPLIER = 3.0625
+const CHUNK_MULTIPLIER_KM = 3.0625
+const CHUNK_MULTIPLIER_M = CHUNK_MULTIPLIER_KM * 1000
 
 
 /**
@@ -77,15 +78,7 @@ function consolidateElements(elements) {
 }
 
 function positionToChunk(lat, lon) {
-    return {lat: Math.floor(lat / CHUNK_MULTIPLIER), lon: Math.floor(lon / CHUNK_MULTIPLIER)}
-}
-
-function getConfigItemValue(path, config, valueName) {
-    return getConfigItem(path, config).values[valueName];
-}
-
-function getConfigItemNodes(path, config) {
-    return getConfigItem(path, config).nodes;
+    return {lat: Math.floor(lat / CHUNK_MULTIPLIER_KM), lon: Math.floor(lon / CHUNK_MULTIPLIER_KM)}
 }
 
 let segmentID = 1;
@@ -95,11 +88,12 @@ function generateDefaultSegmentValues() {
         type: 0, // TODO: seems to be 0 or 1?
         bridge: "False",
         length: 0,
-        s: "", // (57962.1884765625, 249.36279296875, 103074.36437988281),
-        m: "", // (58078.710205078125, 250.6358642578125, 103105.03308105469),
-        e: "", // (58203.53515625, 251.75927734375, 103140.572265625),
+        s: null, // (57962.1884765625, 249.36279296875, 103074.36437988281),
+        m: null, // (58078.710205078125, 250.6358642578125, 103105.03308105469),
+        e: null, // (58203.53515625, 251.75927734375, 103140.572265625),
         ps: 1, // 20,
         ns: 1, // 5
+        // ei, si for intersection end and start
     }
 }
 
@@ -126,7 +120,7 @@ function calcSegmentMiddleString(segment) {
     return `${middleX}, ${middleY}, ${middleZ}`
 }
 
-function addSegmentToChunk(node, chunk) {
+function addNodeAsChunkSegment(node, chunk) {
     const segment = {name: "Segment", nodes: [], values: generateDefaultSegmentValues()}
     segment.values.s = `${node.lat}, 250, ${node.lon}`;
     if(chunk.nodes.length > 0) {
@@ -135,13 +129,15 @@ function addSegmentToChunk(node, chunk) {
         prevSegment.values.e = segment.values.s;
         prevSegment.values.m = calcSegmentMiddleString(prevSegment);
         prevSegment.values.length = calcSegmentLength(prevSegment)
+        prevSegment.values.ns = segment.values.id
+        segment.values.ps = prevSegment.values.id
     }
     chunk.nodes.push(segment)
 }
 
 function generateChunkedRoads(elements) {
     const chunks = {};
-    const allChunks = [];
+    let allChunks = [];
     elements.forEach((way) => {
         way.nodes.forEach((node) => {
             const grid = positionToChunk(node.lat, node.lon);
@@ -150,12 +146,28 @@ function generateChunkedRoads(elements) {
                 chunks[grid.lat][grid.lon] = {name: "Chunk", nodes: [], values: {}}
                 allChunks.push(chunks[grid.lat][grid.lon])
             }
-            addSegmentToChunk(node, chunks[grid.lat][grid.lon])
+            addNodeAsChunkSegment(node, chunks[grid.lat][grid.lon])
             chunks[grid.lat][grid.lon].values.grid = `(${grid.lat},${grid.lon})`
             
         });
     });
-    return allChunks
+    // Remove the last segment, which has 
+    // no middle and end, then clear new last segement's `ns`
+    // clear first segment `ps`
+    allChunks.forEach((chunk) => {
+       chunk.nodes = chunk.nodes.filter((segment) => {
+           const hasAllPosVals = segment.values.s != null
+                            && segment.values.m != null 
+                            && segment.values.e != null;
+           return hasAllPosVals;
+        });
+        if(chunk.nodes.length > 0) {
+            delete chunk.nodes[chunk.nodes.length - 1].values.ns
+            delete chunk.nodes[0].values.ps
+        }
+    });
+    allChunks = allChunks.filter(c => c.nodes.length > 1)
+    return allChunks;
 }
 
 /**
@@ -238,4 +250,4 @@ function toVtolCustomMap (queryRes, worldBbox, mapID, edgeMode, coastSide, biome
     return config;
 }
 
-export default {toVtolCustomMap, CHUNK_MULTIPLIER}
+export default {toVtolCustomMap, CHUNK_MULTIPLIER_KM, CHUNK_MULTIPLIER_M}
