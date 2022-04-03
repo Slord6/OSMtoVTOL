@@ -146,11 +146,13 @@ function generateChunkedRoads(elements) {
         way.nodes.forEach((node) => {
             const grid = positionToChunk(node.lat, node.lon);
             if(!chunks[grid.lat]) chunks[grid.lat] = {}
-            if(!chunks[grid.lat][grid.lon]) chunks[grid.lat][grid.lon] = {name: "Chunk", nodes: [], values: {}}
+            if(!chunks[grid.lat][grid.lon]) {
+                chunks[grid.lat][grid.lon] = {name: "Chunk", nodes: [], values: {}}
+                allChunks.push(chunks[grid.lat][grid.lon])
+            }
             addSegmentToChunk(node, chunks[grid.lat][grid.lon])
             chunks[grid.lat][grid.lon].values.grid = `(${grid.lat},${grid.lon})`
             
-            allChunks.push(chunks[grid.lat][grid.lon])
         });
     });
     return allChunks
